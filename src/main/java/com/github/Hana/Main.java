@@ -11,11 +11,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 
+import javax.print.Doc;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.net.URLEncoder;
+import java.util.*;
 
 
 public class Main {
