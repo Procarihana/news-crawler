@@ -53,11 +53,15 @@
             <scope>compile</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.github.spotbugs/spotbugs-annotations -->
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <version>4.0.4</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
-
-
     <build>
-
         <plugins>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -66,12 +70,24 @@
                     <argLine>-Dfile.encoding=UTF-8</argLine>
                 </configuration>
             </plugin>
-
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>4.0.0</version>
-
+                <configuration>
+                    <omitVisitors>FindDeadLocalStores,UnreadFields</omitVisitors>
+                </configuration>
+                <!--
+                <executions>
+                    <execution>
+                        <id>verify</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                -->
                 <dependencies>
                     <!-- overwrite dependency on spotbugs if you want to specify the version of spotbugs -->
                     <dependency>
@@ -79,6 +95,7 @@
                         <artifactId>spotbugs</artifactId>
                         <version>4.0.4</version>
                     </dependency>
+
                 </dependencies>
             </plugin>
 
