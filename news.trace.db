@@ -945,6 +945,7 @@ Caused by: java.lang.IllegalStateException: This store is closed [1.4.199/4]
 	at org.h2.mvstore.tx.TransactionMap.lock(TransactionMap.java:268)
 	at org.h2.mvstore.db.MVPrimaryIndex.lockRow(MVPrimaryIndex.java:233)
 	... 9 more
+<<<<<<< HEAD
 2020-06-14 12:41:16 jdbc[3]: exception
 org.h2.jdbc.JdbcSQLDataException: Value too long for column """LINK"" VARCHAR(100)": "'https://cj.sina.cn/article/normal_detail?url=https%3A%2F%2Ffinance.sina.cn%2F2020-06-12%2Fdetail-iircuyvi8163522.d.html&vt=4&po... (132)"; SQL statement:
 INSERT INTO LINKS_ALREADY_PROCESSED(link) values (?) [22001-199]
@@ -1226,3 +1227,5 @@ insert into news(url,title,content,create_at,modified_at) values(?,?,?,now(),now
 2020-06-14 16:27:31 jdbc[3]: exception
 org.h2.jdbc.JdbcSQLDataException: Value too long for column """URL"" VARCHAR(100)": "'https://cj.sina.cn/article/normal_detail?url=https%3A%2F%2Ffinance.sina.cn%2Fchina%2Fgncj%2F2020-06-12%2Fdetail-iirczymk6696507... (147)"; SQL statement:
 insert into news(url,title,content,created_at,modified_at) values(?,?,?,now(),now()) [22001-199]
+=======
+>>>>>>> c09c96b04d25337ee635158555454044d776868c

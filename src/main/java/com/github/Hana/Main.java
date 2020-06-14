@@ -51,6 +51,7 @@ public class Main {
         System.out.println("Exit");
     }
 
+
     private static void parseUrlsFromPageAndStoreIntoDatabase(Connection dbConnection, Document document) throws SQLException {
 
         for (Element aTag : document.select("a")) {
@@ -91,6 +92,7 @@ public class Main {
         }
     }
 
+
     private static String getNextLink(Connection dbConnection, String sql) throws SQLException {
         ResultSet resultSet = null;
         try (PreparedStatement statement = dbConnection.
@@ -107,16 +109,14 @@ public class Main {
         return null;
     }
 
+
     private static String getNextLinkAndDelete(Connection dbConnection) throws SQLException {
         String link = getNextLink(dbConnection, "select * from links_to_be_processed LIMIT 1");
         if (link != null) {
             updateDatabate(dbConnection, link, "DELETE FROM LINKS_TO_BE_PROCESSED where link = ?");
-
         }
         return link;
     }
-
-
     private static void storeIntoDatabaseIfItIsNewsPage(Connection dbConnection, String link, Document document) throws SQLException {
         ArrayList<Element> articleTags = document.select("article");
         if (!articleTags.isEmpty()) {
@@ -137,11 +137,9 @@ public class Main {
         }
     }
 
-
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     private static Document httpGetAndParseHtml(String link) throws IOException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
-
         HttpGet httpGet = new HttpGet(link);
         httpGet.addHeader("USER_AGENT",
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) " +
