@@ -17,6 +17,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 public class Main {
@@ -28,28 +29,14 @@ public class Main {
         //数据库链接
         Connection dbConnection = DriverManager
                 .getConnection("jdbc:h2:file:/Users/jinhua/IdeaProjects/news-crewler/news", USER_NAME, PASS_WORD);
-
-        while (true) {
+        String link;
+        //从数据库中加载下一个链接，如果能加载到。则进行循环
+        while ((link = getNextLinkAndDelete(dbConnection)) != null) {
             //先从数据库里面拿一个链接出来（拿出来并从数据库中删除掉），准备处理
             //把待处理的链接池添加到数据库里面
-            List<String> linkPool = loadUrlFromDatabase(dbConnection, "select * from links_to_be_processed");
-            if (linkPool.isEmpty()) {
-                break;
-            }
-            String link = linkPool.remove(linkPool.size() - 1);
-            deleteLinkFromDatabase(dbConnection, link, "DELETE FROM LINKS_TO_BE_PROCESSED where link = ?");
-
-            //把已经处理的链接放入数据库里面连接池
-            //Set<String> processLinks = new HashSet<>(loadUrlFromDatabase(dbConnection, "select link from links_already_processed"));
-            //处理完后从池子（包括数据库）中删除
             if (isLinkProcessed(dbConnection, link)) {
                 continue;
             }
-            //询问数据库是否当前链接是不是被处理了
-//                if (processLinks.contains(link)) {
-//                    continue;
-//                }
-
             if (isInterestingLink(link)) {
                 //what we need.
                 Document document = httpGetAndParseHtml(link);
@@ -57,7 +44,8 @@ public class Main {
                 parseUrlsFromPageAndStoreIntoDatabase(dbConnection, document);
                 //如果是一个详细的新闻页面就存入数据库，否则什么也不做
                 storeIntoDatabaseIfItIsNewsPage(dbConnection, link, document);
-
+            } else {
+                System.out.println("NN:" + link);
             }
         }
         System.out.println("Exit");
@@ -68,7 +56,15 @@ public class Main {
 
         for (Element aTag : document.select("a")) {
             String href = aTag.attr("href");
-            insertLinkIntoDatabase(dbConnection, href, "INSERT INTO LINKS_TO_BE_PROCESSED(link) values (?)");
+            if (href.contains("|")) {
+                href = href.replace("|", "%7C");
+                if (href.startsWith("//")) {
+                    href = "https:" + href;
+                }
+            }
+            if (!href.toLowerCase().startsWith("javascript")) {
+                updateDatabate(dbConnection, href, "INSERT INTO LINKS_TO_BE_PROCESSED(link) values (?)");
+            }
         }
     }
 
@@ -88,60 +84,55 @@ public class Main {
         }
     }
 
-    private static void insertLinkIntoDatabase(Connection dbConnection, String attributeKey, String sql) throws SQLException {
-        try (PreparedStatement statement = dbConnection.prepareStatement(sql)) {
-            statement.setString(1, attributeKey);
-            statement.executeUpdate();
-        }
-    }
-
-    private static void deleteLinkFromDatabase(Connection dbconnection, String link, String sql) throws SQLException {
+    private static void updateDatabate(Connection dbconnection, String value, String sql) throws SQLException {
         try (PreparedStatement statement = dbconnection
                 .prepareStatement(sql)) {
-            statement.setString(1, link);
+            statement.setString(1, value);
             statement.executeUpdate();
         }
     }
 
-    private static List<String> loadUrlFromDatabase(Connection dbConnection, String sql) throws SQLException {
-        List<String> results = new ArrayList<>();
+
+    private static String getNextLink(Connection dbConnection, String sql) throws SQLException {
         ResultSet resultSet = null;
         try (PreparedStatement statement = dbConnection.
                 prepareStatement(sql)) {
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                results.add(resultSet.getString(1));
+                return resultSet.getString(1);
             }
         } finally {
-            if (results != null) {
+            if (resultSet != null) {
                 resultSet.close();
             }
         }
-        return results;
+        return null;
     }
 
-    private static String isContainIllegalLink(String link) {
-        if (link.contains("|")) {
-            link = link.replace("|", "%7C");
+
+    private static String getNextLinkAndDelete(Connection dbConnection) throws SQLException {
+        String link = getNextLink(dbConnection, "select * from links_to_be_processed LIMIT 1");
+        if (link != null) {
+            updateDatabate(dbConnection, link, "DELETE FROM LINKS_TO_BE_PROCESSED where link = ?");
         }
         return link;
     }
-
-    private static String isIncompleteLink(String link) {
-        if (link.startsWith("//")) {
-            link = "https:" + link;
-            System.out.println(link);
-        }
-        return link;
-    }
-
     private static void storeIntoDatabaseIfItIsNewsPage(Connection dbConnection, String link, Document document) throws SQLException {
         ArrayList<Element> articleTags = document.select("article");
         if (!articleTags.isEmpty()) {
             for (Element articleTag : articleTags) {
                 String title = articleTags.get(0).child(0).text();
-                System.out.println(link + title);
-                insertLinkIntoDatabase(dbConnection, link, "INSERT INTO LINKS_ALREADY_PROCESSED(link) values (?)");
+                String content = articleTag.select("p").stream().map(Element::text).collect(Collectors.joining("\n"));
+                try(PreparedStatement statement = dbConnection
+                        .prepareStatement("insert into news(url,title,content,created_at,modified_at) values(?,?,?,now(),now())")){
+                      statement.setString(1,link);
+                      statement.setString(2,title);
+                      statement.setString(3,content);
+                      statement.executeUpdate();
+                }
+                System.out.println(link);
+                System.out.println(title);
+                updateDatabate(dbConnection, link, "INSERT INTO LINKS_ALREADY_PROCESSED(link) values (?)");
             }
         }
     }
@@ -149,8 +140,6 @@ public class Main {
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     private static Document httpGetAndParseHtml(String link) throws IOException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
-        isContainIllegalLink(link);
-        isIncompleteLink(link);
         HttpGet httpGet = new HttpGet(link);
         httpGet.addHeader("USER_AGENT",
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) " +
@@ -194,7 +183,7 @@ public class Main {
     }
 
     private static boolean isNotNeedLink(String link) {
-        return !link.contains("passport") && !link.contains("callback") && !link.contains("video") && !link.contains("auto") && !link.contains("share");
+        return !link.contains("passport") && !link.contains("callback") && !link.contains("video") && !link.contains("auto") && !link.contains("share") && !link.contains("games");
     }
 }
 
