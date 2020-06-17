@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.Hana.MyMapper">
+    <select id="selectNextAvailableLink" resultType="String">
+        select link from links_to_be_processed LIMIT 1
+    </select>
+
+    <delete id="deleteNextAvailableLink" parameterType="String">
+        delete from links_to_be_processed where link = #{link}
+    </delete>
+
+    <insert id="insertNews" parameterType="com.github.Hana.News">
+        insert into news(url,title,content,created_at,modified_at)
+        values (#{url},#{title},#{content},now(),now())
+    </insert>
+
+    <select id="countLink" resultType="int">
+        select count (link) from links_already_processed
+        where link = #{link}
+    </select>
+
+    <insert id="insertLink" parameterType="HashMap">
+        insert into
+        <choose>
+            <when test=  "tableName == 'links_already_processed'">
+                links_already_processed
+            </when>
+            <otherwise>
+                links_to_be_processed
+            </otherwise>
+        </choose>
+        (link) values #{link}
+    </insert>
+
+</mapper>

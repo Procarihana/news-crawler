@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="org.h2.Driver"/>
+                <property name="url" value="jdbc:h2:file:/Users/jinhua/IdeaProjects/news-crewler/news"/>
+                <property name="username" value="hana"/>
+                <property name="password" value="hana"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <mapper resource="db/Mybatis/MyMapper.xml"/>
+    </mappers>
+</configuration>

@@ -21,7 +21,7 @@ public class JdbcCrawlerDao implements CrawlerDao {
     public String getNextLinkAndDelete() throws SQLException {
         String link = getNextLink("select * from links_to_be_processed LIMIT 1");
         if (link != null) {
-            updateDatabate(link, "DELETE FROM LINKS_TO_BE_PROCESSED where link = ?");
+            updateDatabase(link, "DELETE FROM LINKS_TO_BE_PROCESSED where link = ?");
         }
         return link;
     }
@@ -42,7 +42,7 @@ public class JdbcCrawlerDao implements CrawlerDao {
         return null;
     }
 
-    public void updateDatabate(String value, String sql) throws SQLException {
+    public void updateDatabase(String value, String sql) throws SQLException {
         try (PreparedStatement statement = dbConnection
                 .prepareStatement(sql)) {
             statement.setString(1, value);
@@ -50,15 +50,15 @@ public class JdbcCrawlerDao implements CrawlerDao {
         }
     }
 
-    public void insertNewsIntoDatabase(String url, String title, String content) throws SQLException {
+    public void insertNewsIntoDatabaseAndInsertLinkIntoAlreadyProcessed(String url, String title, String content) throws SQLException {
         try (PreparedStatement statement = dbConnection
-                .prepareStatement("insert into news(url,title,content,created_at,modified_at) values(?,?,?,now(),now())")) {
+                .prepareStatement("insert into news(url,title,content,created_at,modified_at) values(?,?,?,now(),now()")) {
             statement.setString(1, url);
             statement.setString(2, title);
             statement.setString(3, content);
             statement.executeUpdate();
         }
-        updateDatabate(url, "INSERT INTO LINKS_ALREADY_PROCESSED(link) values (?)");
+        updateDatabase(url, "INSERT INTO LINKS_ALREADY_PROCESSED(link) values (?)");
     }
 
     public boolean isLinkProcessed(String link) throws SQLException {
@@ -75,5 +75,9 @@ public class JdbcCrawlerDao implements CrawlerDao {
                 resultSet.close();
             }
         }
+    }
+
+    public void insertLinkIntoToBeProcessed(String href) throws SQLException {
+       updateDatabase(href,"INSERT INTO LINKS_TO_BE_PROCESSED(link) values (?)");
     }
 }

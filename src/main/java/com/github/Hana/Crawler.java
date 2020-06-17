@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 
 public class Crawler {
 
-    private static CrawlerDao dao = new JdbcCrawlerDao();
-
+    //private static CrawlerDao dao = new JdbcCrawlerDao();
+    private static CrawlerDao dao = new MybatisCrawlerDao();
     public void run() throws SQLException, IOException {
         String link;
         //从数据库中加载下一个链接，如果能加载到。则进行循环
@@ -56,16 +56,21 @@ public class Crawler {
 
         for (Element aTag : document.select("a")) {
             String href = aTag.attr("href");
-            if (href.contains("|")) {
-                href = href.replace("|", "%7C");
-                if (href.startsWith("//")) {
-                    href = "https:" + href;
-                }
-            }
+            href = checkUrl(href);
             if (!href.toLowerCase().startsWith("javascript")) {
-                dao.updateDatabate(href, "INSERT INTO LINKS_TO_BE_PROCESSED(link) values (?)");
+                dao.insertLinkIntoToBeProcessed(href);
             }
         }
+    }
+
+    private static String checkUrl(String href) {
+        if (href.contains("|")) {
+            href = href.replace("|", "%7C");
+            if (href.startsWith("//")) {
+                href = "https:" + href;
+            }
+        }
+        return href;
     }
 
 
@@ -75,7 +80,7 @@ public class Crawler {
             for (Element articleTag : articleTags) {
                 String title = articleTags.get(0).child(0).text();
                 String content = articleTag.select("p").stream().map(Element::text).collect(Collectors.joining("\n"));
-                dao.insertNewsIntoDatabase(url, title, content);
+                dao.insertNewsIntoDatabaseAndInsertLinkIntoAlreadyProcessed(url, title, content);
                 System.out.println(url);
                 System.out.println(title);
             }
@@ -125,7 +130,6 @@ public class Crawler {
             return link.contains(result);
         }
         return !link.contains(link); // !link.equal(link)
-
     }
 
     private static boolean isNotNeedLink(String link) {
