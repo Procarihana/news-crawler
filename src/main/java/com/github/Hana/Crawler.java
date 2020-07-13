@@ -20,39 +20,47 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
-public class Crawler {
+public class Crawler extends Thread {
 
     //private static CrawlerDao dao = new JdbcCrawlerDao();
-    private static CrawlerDao dao = new MybatisCrawlerDao();
-    public void run() throws SQLException, IOException {
+    private CrawlerDao dao;
+
+    public Crawler(CrawlerDao dao) {
+        this.dao = dao;
+    }
+
+    @Override
+    public void run() {
         String link;
         //从数据库中加载下一个链接，如果能加载到。则进行循环
-        while ((link = dao.getNextLinkAndDelete()) != null) {
+        while (true) {
+            try {
+                if (!((link = dao.getNextLinkAndDelete()) != null)) break;
+                if (dao.isLinkProcessed(link)) {
+                    continue;
+                }
+                if (isInterestingLink(link)) {
+                    //登录需要的新闻页面，爬取新闻页面里面其他的链接
+                    Document document = httpGetAndParseHtml(link);
+                    //把链接里面的A标签映射成A标签里面的链接，并添加到连接池里面
+                    parseUrlsFromPageAndStoreIntoDatabase(document);
+                    //如果是一个详细的新闻页面就存入数据库，否则什么也不做
+                    storeIntoDatabaseIfItIsNewsPage(link, document);
+                } else {
+                    System.out.println("NN:" + link);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             //先从数据库里面拿一个链接出来（拿出来并从数据库中删除掉），准备处理
             //把待处理的链接池添加到数据库里面
-            if (dao.isLinkProcessed(link)) {
-                continue;
-            }
-            if (isInterestingLink(link)) {
-                //登录需要的新闻页面，爬取新闻页面里面其他的链接
-                Document document = httpGetAndParseHtml(link);
-                //把链接里面的A标签映射成A标签里面的链接，并添加到连接池里面
-                parseUrlsFromPageAndStoreIntoDatabase(document);
-                //如果是一个详细的新闻页面就存入数据库，否则什么也不做
-                storeIntoDatabaseIfItIsNewsPage(link, document);
-            } else {
-                System.out.println("NN:" + link);
-            }
+            System.out.println("Exit");
+            System.out.println("NN:" + link);
         }
-        System.out.println("Exit");
-    }
-
-    public static void main(String[] args) throws SQLException, IOException {
-        new Crawler().run();
     }
 
 
-    private static void parseUrlsFromPageAndStoreIntoDatabase(Document document) throws SQLException {
+    private void parseUrlsFromPageAndStoreIntoDatabase(Document document) throws SQLException {
 
         for (Element aTag : document.select("a")) {
             String href = aTag.attr("href");
@@ -74,7 +82,7 @@ public class Crawler {
     }
 
 
-    private static void storeIntoDatabaseIfItIsNewsPage(String url, Document document) throws SQLException {
+    private void storeIntoDatabaseIfItIsNewsPage(String url, Document document) throws SQLException {
         ArrayList<Element> articleTags = document.select("article");
         if (!articleTags.isEmpty()) {
             for (Element articleTag : articleTags) {
@@ -108,7 +116,7 @@ public class Crawler {
     }
 
     private static boolean isInterestingLink(String link) {
-        return isNotNeedLink(link) && (isNewsPage(link) || isIndexPage(link));
+        return isIndexPage(link)||(isNotNeedLink(link) && (isNewsPage(link)));
 
     }
 
@@ -117,7 +125,7 @@ public class Crawler {
     }
 
     private static boolean isNewsPage(String link) {
-        return link.contains("sina.cn") && isContainArticleTime(link);
+        return (link.contains("sina.cn") ||link.contains("sina.com.cn"))&& isContainArticleTime(link);
     }
 
     private static boolean isContainArticleTime(String link) {

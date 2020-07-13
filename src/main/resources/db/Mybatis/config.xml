@@ -4,18 +4,22 @@
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 
 <configuration>
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
     <environments default="development">
         <environment id="development">
             <transactionManager type="JDBC"/>
             <dataSource type="POOLED">
-                <property name="driver" value="org.h2.Driver"/>
-                <property name="url" value="jdbc:h2:file:/Users/jinhua/IdeaProjects/news-crewler/news"/>
-                <property name="username" value="hana"/>
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/MOCKNEWS?characterEncoding=utf-8"/>
+                <property name="username" value="root"/>
                 <property name="password" value="hana"/>
             </dataSource>
         </environment>
     </environments>
     <mappers>
         <mapper resource="db/Mybatis/MyMapper.xml"/>
+        <mapper resource="db/Mybatis/MockMapper.xml"/>
     </mappers>
 </configuration>

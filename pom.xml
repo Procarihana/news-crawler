@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ProcariHana</groupId>
-    <artifactId>news-crewler</artifactId>
+    <artifactId>news-crawler</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -20,6 +20,14 @@
         </repository>
     </repositories>
     <dependencies>
+
+        <!-- https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-high-level-client -->
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-high-level-client</artifactId>
+            <version>7.8.0</version>
+        </dependency>
+
 
         <!-- https://mvnrepository.com/artifact/org.mybatis/mybatis -->
         <dependency>
@@ -68,6 +76,14 @@
             <version>4.0.4</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.20</version>
+        </dependency>
+
     </dependencies>
     <build>
         <plugins>
@@ -77,8 +93,8 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>5.2.4</version>
                 <configuration>
-                    <url>jdbc:h2:file:/Users/jinhua/IdeaProjects/news-crewler/news</url>
-                    <user>hana</user>
+                    <url>jdbc:mysql://localhost:3306/NEWS</url>
+                    <user>root</user>
                     <password>hana</password>
                 </configuration>
 

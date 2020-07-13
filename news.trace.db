@@ -1962,3 +1962,6 @@ Caused by: java.lang.IllegalStateException: The file is locked: nio:/Users/jinhu
 	at org.h2.mvstore.FileStore.open(FileStore.java:172)
 	at org.h2.mvstore.MVStore.<init>(MVStore.java:390)
 	... 39 more
+2020-06-20 10:58:50 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM [*]"; expected "identifier"; SQL statement:
+select * from [42001-199]
