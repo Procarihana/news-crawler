@@ -18,6 +18,7 @@
 #### Docker 启动 数据库
 - 启动MySQL数据库
 `docker run --name springboot-mysql -e MYSQL_ROOT_PASSWORD=hana -e -p 3306:3306 -d mysql`
+- 如有需要使用H2数据库时，需要注意对 MyBatic 和 Flyway 进行相应的配置调整。
 - Docker 使用注意事项
 1. 需要外部访问数据库时，要进行 `-p`配置。
 2. 数据库持久化需要进行 `-v`配置。
@@ -25,7 +26,7 @@
 #### 使用 Flyway 进行数据库初始化
 - 数据库新建以及 Maven 刷新后，可执行 Flyway 对数据库进行建表自动建表操作。
 `mvn flyway:migrate`
-- 注意：数据库里面存储的是 `https://sina.cn/` 作为原始爬取的网站，如果想要爬取其他网站的需要自行放入。
+- 注意：数据库里面存储的是 `https://sina.cn/` 作为原始爬取的网站，如果想要爬取其他网站的需要进行调整。
 - 如若需要，可以直接从newsdata.sql中直接获取数据。
 #### Docker 启动 Elasticsearch
 - (参考文档)[https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html]
